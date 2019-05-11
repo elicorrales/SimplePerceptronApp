@@ -14,26 +14,21 @@ public static final int CHANGE_NUMITERATIONS = 5;
 public static final int CHANGE_LEARNING = 6;
 
 
-/*
-static final int   numTrainingSamples = 20;
-static final float learningRate = .1;
-static final int   iterations = 1;ning
-*/
-
 Perceptron perceptron;
-TrainingSample[] training;
+TrainingSample[] trainingSamples;
 boolean numTrainingSamplesInitialized = false;
 Sample mousePoint;
 int mousePointGuess = 0;
+int previousParam;
 int currentParam = RANDOM_SAMPLES_EVEN_SPREAD;
-int randomSpreadMode = RANDOM_SAMPLES_EVEN_SPREAD;
+int currentRandomSpreadMode = RANDOM_SAMPLES_EVEN_SPREAD;
 boolean train = false;
 boolean trainContinuous = false;
 boolean increase = false;
 boolean decrease = false;
-float slope   = 1;
-int   yOffset = 0;
-int   numTrainingSamples = 100;
+float slope   = 0.1;
+int   yOffset = 300;
+int   numTrainingSamples = 500;
 //float learningRate = .1;
 //int   iterations = 100;
 
@@ -46,6 +41,8 @@ void setup() {
   textSize(30);
 
   perceptron = new Perceptron(NUM_FEATURES);
+  perceptron.learningRate = 0.02;
+  perceptron.iterations   = 4;
   
   //this will be our test data point (moving the mouse around)
   mousePoint = new Sample(NUM_FEATURES);
@@ -71,7 +68,7 @@ void draw() {
   line(0,yOffset ,width, slope*width+yOffset);  //this line demarcates/separates the two classes (blue vs red)
   
   if (numTrainingSamplesInitialized) {
-    for (TrainingSample sample : training) {
+    for (TrainingSample sample : trainingSamples) {
       int guess = perceptron.guess(sample);
       sample.guess = guess;
       sample.draw();
@@ -105,75 +102,109 @@ private void showCurrentParameterValue() {
 private void showParamSelection() {
   String text = "";
   switch (currentParam) {
-    case RANDOM_SAMPLES_EVEN_SPREAD: text = "EVEN SPREAD"; randomSpreadMode = RANDOM_SAMPLES_EVEN_SPREAD; break;
-    case RANDOM_SAMPLES_AROUND_SLOPE:text = "AROUND SLOPE"; randomSpreadMode = RANDOM_SAMPLES_AROUND_SLOPE; break;
+    case RANDOM_SAMPLES_EVEN_SPREAD:
+                      text = "EVEN SPREAD";
+                      if (previousParam != currentParam) {
+                        previousParam = currentParam;
+                        numTrainingSamplesInitialized = false;
+                        currentRandomSpreadMode = RANDOM_SAMPLES_EVEN_SPREAD;
+                      }
+                      break;
+    case RANDOM_SAMPLES_AROUND_SLOPE:
+                      text = "AROUND SLOPE";
+                      if (previousParam != currentParam) {
+                        previousParam = currentParam;
+                        numTrainingSamplesInitialized = false;
+                        currentRandomSpreadMode = RANDOM_SAMPLES_AROUND_SLOPE;
+                      }
+                      break;
     case CHANGE_SLOPE:
                       text = "CHANGE_SLOPE";
-                      if (increase) {
-                        slope += 0.1; increase = false;
-                      }
-                      if (decrease) {
-                        slope -= 0.1; decrease = false;
+                      if (previousParam != currentParam || increase || decrease) {
+                        previousParam = currentParam;
+                        numTrainingSamplesInitialized = false;
+                        if (increase) {
+                          slope += 0.1; increase = false;
+                        }
+                        if (decrease) {
+                          slope -= 0.1; decrease = false;
+                        }
                       }
                       break;
     case CHANGE_YOFFS:
                       text = "CHG_YOFFST";
-                      if (increase) {
-                        yOffset += 10; increase = false;
-                      }
-                      if (decrease) {
-                        yOffset -= 10; decrease = false;
+                      if (previousParam != currentParam || increase || decrease) {
+                        previousParam = currentParam;
+                        numTrainingSamplesInitialized = false;
+                        if (increase) {
+                          yOffset += 10; increase = false;
+                        }
+                        if (decrease) {
+                          yOffset -= 10; decrease = false;
+                        }
                       }
                       break;
     case CHANGE_NUMSAMPLES:
                       text = "CHG_NUMSAMP";
-                      if (increase) {
-                        if (numTrainingSamples<10) numTrainingSamples += 1;
-                        else if (numTrainingSamples<100) numTrainingSamples +=10;
-                        else numTrainingSamples +=100;
-                        increase = false;
+                      if (previousParam != currentParam || increase || decrease) {
+                        previousParam = currentParam;
+                        numTrainingSamplesInitialized = false;
+                        if (increase) {
+                          if (numTrainingSamples<10) numTrainingSamples += 1;
+                          else if (numTrainingSamples<100) numTrainingSamples +=10;
+                          else numTrainingSamples +=100;
+                          increase = false;
+                        }
+                        if (decrease) {
+                          if (numTrainingSamples>0 && numTrainingSamples<10) numTrainingSamples -= 1;
+                          else if (numTrainingSamples<100) numTrainingSamples -=10;
+                          else numTrainingSamples -=100;
+                          decrease = false;
+                        }
+                        if (numTrainingSamples <= 0) numTrainingSamples = 1;
                       }
-                      if (decrease) {
-                        if (numTrainingSamples>0 && numTrainingSamples<10) numTrainingSamples -= 1;
-                        else if (numTrainingSamples<100) numTrainingSamples -=10;
-                        else numTrainingSamples -=100;
-                        decrease = false;
-                      }
-                      if (numTrainingSamples <= 0) numTrainingSamples = 1;
                       break;
     case CHANGE_NUMITERATIONS:
                       text = "CHG_ITRATION";
-                      if (increase) {
-                        if (perceptron.iterations<10) perceptron.iterations += 1;
-                        else if (perceptron.iterations<100) perceptron.iterations +=10;
-                        else if (perceptron.iterations<1000) perceptron.iterations +=100;
-                        else perceptron.iterations += 500;
-                        increase = false;
+                      if (previousParam != currentParam || increase || decrease) {
+                        previousParam = currentParam;
+                        numTrainingSamplesInitialized = false;
+                        if (increase) {
+                          if (perceptron.iterations<10) perceptron.iterations += 1;
+                          else if (perceptron.iterations<100) perceptron.iterations +=10;
+                          else if (perceptron.iterations<1000) perceptron.iterations +=100;
+                          else perceptron.iterations += 500;
+                          increase = false;
+                        }
+                        if (decrease) {
+                          if (perceptron.iterations>0 && perceptron.iterations<10) perceptron.iterations -= 1;
+                          else if (perceptron.iterations<100) perceptron.iterations -=10;
+                          else if (perceptron.iterations<1000) perceptron.iterations -=100;
+                          else perceptron.iterations -= 500;
+                          decrease = false;
+                        }
+                        if (perceptron.iterations<=0) perceptron.iterations = 1;
                       }
-                      if (decrease) {
-                        if (perceptron.iterations>0 && perceptron.iterations<10) perceptron.iterations -= 1;
-                        else if (perceptron.iterations<100) perceptron.iterations -=10;
-                        else if (perceptron.iterations<1000) perceptron.iterations -=100;
-                        else perceptron.iterations -= 500;
-                        decrease = false;
-                      }
-                      if (perceptron.iterations<=0) perceptron.iterations = 1;
                       break;
     case CHANGE_LEARNING:
                       text = "CHG_LEARN";
-                      if (increase) {
-                        if (perceptron.learningRate<1) perceptron.learningRate += 0.1;
-                        else if (perceptron.learningRate<10) perceptron.learningRate +=1;
-                        else perceptron.learningRate += 10;
-                        increase = false;
+                      if (previousParam != currentParam || increase || decrease) {
+                        previousParam = currentParam;
+                        numTrainingSamplesInitialized = false;
+                        if (increase) {
+                          if (perceptron.learningRate<1) perceptron.learningRate += 0.01;
+                          else if (perceptron.learningRate<10) perceptron.learningRate +=0.1;
+                          else perceptron.learningRate += 1;
+                          increase = false;
+                        }
+                        if (decrease) {
+                          if (perceptron.learningRate>0 && perceptron.learningRate<1) perceptron.learningRate -= 0.01;
+                          else if (perceptron.learningRate<10) perceptron.learningRate -=0.1;
+                          else perceptron.learningRate -= 1;
+                          decrease = false;
+                        }
+                        if (perceptron.learningRate<=0.01) perceptron.learningRate = 0.01;
                       }
-                      if (decrease) {
-                        if (perceptron.learningRate>0 && perceptron.learningRate<1) perceptron.learningRate -= 0.1;
-                        else if (perceptron.learningRate<10) perceptron.learningRate -=1;
-                        else perceptron.learningRate -= 10;
-                        decrease = false;
-                      }
-                      if (perceptron.learningRate<=0.1) perceptron.learningRate = 0.1;
                       break;
                      
     default:
@@ -211,13 +242,20 @@ private void showPlusMinusSelection() {
 
 
 private void train() {
-  training = new TrainingSample[numTrainingSamples];
-  for (int sample=0; sample<training.length; sample++) {
-    training[sample] = new TrainingSample(randomSpreadMode, NUM_FEATURES, slope, yOffset);
+  if (!numTrainingSamplesInitialized) {
+    trainingSamples = new TrainingSample[numTrainingSamples];
+    for (int sample=0; sample<trainingSamples.length; sample++) {
+      trainingSamples[sample] = new TrainingSample(currentRandomSpreadMode, NUM_FEATURES, slope, yOffset);
+    }
+    numTrainingSamplesInitialized = true;
   }
-  numTrainingSamplesInitialized = true;
-  perceptron.train(training);
-  delay(400);
+  //trainingSamples = new TrainingSample[numTrainingSamples];
+  //for (int sample=0; sample<trainingSamples.length; sample++) {
+    //trainingSamples[sample] = new TrainingSample(randomSpreadMode, NUM_FEATURES, slope, yOffset);
+  //}
+  //numTrainingSamplesInitialized = true;
+  perceptron.train(trainingSamples);
+  delay(20);
 }
 
 
@@ -226,13 +264,13 @@ boolean pressed = false;
 boolean pressedAndReleased = false;
 void mousePressed() {
   pressedAndReleased = false;
-  println("pressed");
+  //println("pressed");
   millisPressed = millis();
   pressed = true;
   redraw();
 }
 void mouseReleased() {
-  println("released");
+  //println("released");
   long millisMouseButtonHeldDown = millis() - millisPressed;
   
   pressed = false;
@@ -240,7 +278,7 @@ void mouseReleased() {
   
   if (millisMouseButtonHeldDown > 500 &&
     mouseX>=260 && mouseX<=360 && mouseY>=height-30 && mouseY<=height-10) {
-      println("train continuous");
+      //println("train continuous");
       trainContinuous = true;    
   } else {
     mousePoint.radius = 10;
@@ -256,26 +294,26 @@ void mouseDragged() {
   redraw();
 }
 void mouseClicked() {
-  println("clicked");
+  //println("clicked");
   if (mouseX>=0 && mouseX<=230 && mouseY>=height-30 && mouseY<=height-10) {
-    println("change curr param");
+    //println("change curr param");
     currentParam++;
   } else 
   if (mouseX>=260 && mouseX<=360 && mouseY>=height-30 && mouseY<=height-10) {
-    println("train or stop");
+    //println("train or stop");
     if (!pressedAndReleased && trainContinuous) {
       trainContinuous = false; train = false;
     } else {
-      println("train or stop");
+      //println("train or stop");
       train = train?false:true;
     }
   } else
   if (mouseX>=370 && mouseX<=390 && mouseY>=height-30 && mouseY<=height-10) {
-    println("increase");
+    //println("increase");
     increase = true;
   } else
   if (mouseX>=400 && mouseX<=420 && mouseY>=height-30 && mouseY<=height-10) {
-    println("decrease");
+    //println("decrease");
     decrease = true;
   }
   

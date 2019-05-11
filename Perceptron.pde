@@ -38,8 +38,13 @@ class Perceptron {
   private void adjustWeightsAccordingToErrorAndInputs(int error, float[] inputs) {
     for (int w=0; w<weights.length; w++) {
       weights[w] += error * inputs[w] * learningRate;
-      println("w:"+weights[w]+", err:"+error+", in:"+inputs[w]+", lern:"+learningRate);
+      //println("w:"+weights[w]+", err:"+error+", in:"+inputs[w]+", lern:"+learningRate);
     }
+    //now we have to adjust the biasWeight as well
+    //biasWeight += error * 1  * learningRate;  // "1" is the bias Input
+  }
+  
+  private void adjustBiasWeightAccordingToErrorAndInputs(int error, float[] inputs) {
     //now we have to adjust the biasWeight as well
     biasWeight += error * 1  * learningRate;  // "1" is the bias Input
   }
@@ -49,6 +54,10 @@ class Perceptron {
     int error = sample.answer - guess;
     sample.guess = guess;
     adjustWeightsAccordingToErrorAndInputs(error,sample.features);
+    guess = guess(sample);
+    error = sample.answer - guess;
+    sample.guess = guess;
+    adjustBiasWeightAccordingToErrorAndInputs(error,sample.features);
     return error;
   }
 
@@ -60,6 +69,6 @@ class Perceptron {
         errSum += error;
       }
     }
-    println("\n\nerrSum:"+errSum + ", w0:"+weights[0] + ", w1:"+weights[1]);
+    //println("\n\nerrSum:"+errSum + ", w0:"+weights[0] + ", w1:"+weights[1]);
   }
 }
