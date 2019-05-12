@@ -3,20 +3,22 @@ class TrainingSample extends Sample {
   int   guess;
   boolean initialized = false;
   
- TrainingSample(int randomSpreadMode, int numFeatures, float slope, float yOffset) {
+ TrainingSample(Parameter randomSpreadMode, int numFeatures, float slope, float yOffset) {
    super(numFeatures);
    while (!initialized) initializeSample(randomSpreadMode,slope,yOffset);
  }
 
-  private void initializeSample(int randomSpreadMode, float slope, float yOffset) {
+  private void initializeSample(Parameter randomSpreadMode, float slope, float yOffset) {
    float tempX=0,tempY=0;
    switch (randomSpreadMode) {
    case RANDOM_SAMPLES_EVEN_SPREAD:
         tempX = random(width); tempY = random(height);
         break;
+/*
     case RANDOM_SAMPLES_AROUND_SLOPE:
         tempX = random(width); tempY = slope*tempX + 100 - random(200) + yOffset;
         break;
+*/
     default:
    }
    features[0] = tempX; features[1] = tempY;

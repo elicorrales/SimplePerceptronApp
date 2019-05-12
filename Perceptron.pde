@@ -1,14 +1,20 @@
 class Perceptron {
+ int numFeatures;
  float[] weights;
  float   learningRate = 0.1;
  int     iterations = 1;
  float   biasWeight; //assumes bias (or another single input of 1, in addition to all the other sample inputs)
  
  Perceptron(int numFeatures) {
+   this.numFeatures = numFeatures;
+   newWeights();
+ }
+  
+  void newWeights() {
    weights = new float[numFeatures];
    for (int i=0; i<weights.length; i++) { weights[i] = random(-1,1); }
-   biasWeight = random(-1,1);
- }
+   biasWeight = random(-1,1);      
+  }
   
   private float sumSampleFeaturesTimesWeights(Sample sample) {
     float sum = 0;
@@ -61,7 +67,7 @@ class Perceptron {
     return error;
   }
 
-  void train(TrainingSample[] samples) {
+  boolean train(TrainingSample[] samples) {
     int errSum = 0;
     for (int i=0; i<iterations; i++) {
       for (TrainingSample sample : samples) {
@@ -70,5 +76,6 @@ class Perceptron {
       }
     }
     //println("\n\nerrSum:"+errSum + ", w0:"+weights[0] + ", w1:"+weights[1]);
+    return errSum==0;
   }
 }
